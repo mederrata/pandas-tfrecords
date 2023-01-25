@@ -187,7 +187,7 @@ def _bytes_feature(value):
     try:
         return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
     except TypeError:
-        return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value.tobytes()]))
+        return tf.train.Feature(bytes_list=tf.train.BytesList(value=[np.array(value).tobytes()]))
 
 def _float_feature(value):
     if isinstance(value, dict):
