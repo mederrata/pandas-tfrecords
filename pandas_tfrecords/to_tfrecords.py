@@ -161,7 +161,7 @@ def _bytes_feature(value):
 
 def _float_feature(value):
     if isinstance(value, dict):
-        value = value.values()
+        value = [c if c is not None else -999 for c in value.values()]
     if value is None:
         value = -999
     try:
@@ -175,7 +175,7 @@ def _float_feature(value):
 
 def _int64_feature(value):
     if isinstance(value, dict):
-        value = value.values()
+        value = [c if c is not None else -999 for c in value.values()]
     if value is None:
         value = -999
     try:
