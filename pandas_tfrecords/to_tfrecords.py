@@ -142,6 +142,8 @@ def _get_feature_func(val):
 
 
 def _bytes_feature(value):
+    if isinstance(value, dict):
+        value = value.values()
     if value is None:
         value = ''
     if isinstance(value, type(tf.constant(0))):
@@ -158,6 +160,8 @@ def _bytes_feature(value):
         return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value.tobytes()]))
 
 def _float_feature(value):
+    if isinstance(value, dict):
+        value = value.values()
     if value is None:
         value = -999
     try:
@@ -170,6 +174,8 @@ def _float_feature(value):
 
 
 def _int64_feature(value):
+    if isinstance(value, dict):
+        value = value.values()
     if value is None:
         value = -999
     try:
