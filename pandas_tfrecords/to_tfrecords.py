@@ -2,11 +2,23 @@ import os
 import tempfile
 from typing import Type
 import uuid
+try:
+    from collections.abc import Iterable
+except ImportError:
+    from collections import Iterable
 
 import numpy as np
 import s3fs
 import tensorflow as tf
 
+
+def flatten(coll):
+    for i in coll:
+        if isinstance(i, Iterable) and not isinstance(i, str):
+            for subc in flatten(i):
+                yield subc
+        else:
+            yield i
 
 __all__ = 'to_tfrecords',
 
@@ -101,12 +113,30 @@ def get_schema(df, columns=None, spark_schema=None):
                     _get_feature_func(val))
     else:
         for col in df.columns:
-            if 'int' in spark_schema[col]:
-                schema[col] = _int64_feature
-            elif ('float' in spark_schema[col]) or ('double' in spark_schema[col]):
-                schema[col] = _float_feature
-            else:
-                schema[col] = _bytes_feature
+            try:
+                if 'int' in spark_schema[col]:
+                    schema[col] = _int64_feature
+                elif ('float' in spark_schema[col]) or ('double' in spark_schema[col]):
+                    schema[col] = _float_feature
+                else:
+                    schema[col] = _bytes_feature
+            except KeyError:
+                def isfloat(num):
+                    try:
+                        float(num)
+                        return True
+                    except ValueError:
+                        return False
+                # infer value from a sample
+                test_val = list(flatten(df[col].values[:100]))
+                test_val = [c for c in test_val if c is not None]
+                if isinstance(test_val[0], int):
+                    schema[col] = _int64_feature
+                elif isfloat(test_val[0]):
+                    schema[col] = _float_feature
+                else:
+                    schema[col] = _bytes_feature
+
 
     return schema
 
@@ -184,5 +214,8 @@ def _int64_feature(value):
         if np.isnan(value):
             value = -999
         value = [value]
-    value = [-999 if np.isnan(c) else int(c) for c in value]
+    try:
+        value = [-999 if np.isnan(c) else int(c) for c in value]
+    except ValueError:
+        pass
     return tf.train.Feature(int64_list=tf.train.Int64List(value=value))
