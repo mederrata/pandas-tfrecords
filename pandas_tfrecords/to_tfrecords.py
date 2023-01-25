@@ -155,7 +155,7 @@ def _bytes_feature(value):
     try:
         return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
     except TypeError:
-        return tf.train.Feature(bytes_list=tf.train.BytesList(value=value))
+        return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value.tobytes()]))
 
 def _float_feature(value):
     if value is None:
